@@ -11,6 +11,7 @@ Another simplification was to limit the alphabet for CFGs to all lowercase lette
 # Commands
 
 "help" or "h" - Pulls up an explanation of how to enter input, and how to quit the program
+
 "quit" or "q" - Quits the program
 
 # How to Enter a CFG
