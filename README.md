@@ -10,6 +10,10 @@ S->ab
 
 ![Image of output from cfg-to-lambert](https://github.com/kegross/cfg-to-lambert/blob/main/aSbLambertGraph.pdf)
 
+# Dependencies
+
+This code uses [graphviz](https://graphviz.org/) to generate the lambert graph image. Other graph visualization software may be used, but a new createLambertVisual function would be needed, and the main function would need to be edited slightly.
+
 # Simplifications
 
 The use of context free grammars specifically is an attempt at making displaying a Lambert graph possible in all cases. Attempting all possible rewrite grammars would necessitate significant changes to the code, and might not be similar in nature to this project. Some grammars also may be impossible, so some check would need to be preformed before the rules go through the code to ensure it is possible to create a DFBTA which would then result in a Lambert graph.
