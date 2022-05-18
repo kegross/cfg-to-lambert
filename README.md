@@ -1,8 +1,10 @@
 # cfg-to-lambert
 
-An attempt at creating a program that takes in a context free rewrite grammar [link?] and creates a Lambert graph from the inputted context free grammar.
+An attempt at creating a program that takes in a [context free rewrite grammar](https://en.wikipedia.org/wiki/Context-free_grammar) and creates a Lambert graph from the inputted context free grammar.
 
-A Lambert graph is also known as a Strongly Directed Hypergraph, and can be described as a directed hypergraph where the edges are ordered. This order comes from zero-indexed numbers listed within the tails of a hyperedge.
+A Lambert graph is also known as a Strongly Directed Hypergraph, and can be described as a [directed hypergraph](https://www.sciencedirect.com/science/article/pii/S0304397516002097) where the edges are ordered. This order comes from zero-indexed numbers listed within the tails of a hyperedge.
+
+
 
 [add image here?]
 
