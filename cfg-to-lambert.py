@@ -1,25 +1,44 @@
 """
-An attempt at creating a program that takes in a context free rewrite grammar and
-creates a Lambert graph from the inputted context free grammar.
+An attempt at creating a program that takes in a context free rewrite grammar and creates a Lambert graph from the
+inputted context free grammar.
 A Lambert graph is also known as a Strongly Directed Hypergraph, and can be described as a directed
 hypergraph where the edges are ordered. This order comes from zero-indexed numbers listed within the
 tails of a hyperedge.
+Some liberties and shortcuts have been taken, but some may be undone, and some are necessary to allow this project to
+run.
 
 @author Kiera Gross
 email: kiera.gross@stonybrook.edu
 """
+import graphviz as gv
+import tempfile
 
-# This is the struct to be used for creating a lambert graph so all the necessary information to display it is stored
+
+"""
+LambertGraph Class
+Creates an instance of a lambert graph with all the necessary information to create an image
+
+nodes: the nodes in the graph 
+--> stored as a list
+edges: the hyperedges of the graph
+--> stored as a dictionary
+    --> keys are numbers: zero to k-1 where k is the number of edges
+    --> values are lists of tails, use lists to preserve order (don't need something else to track order)
+edge_des: the "destination" or head of the hyperedge in question
+--> stored as a dictionary
+    --> keys are numbers: zero to k-1 where k is the number of edges
+    --> values are lists of strings, each string being the name of a node
+"""
+
 class LambertGraph:
-    def __init__(self, nodes, edges, edge_weight, rules):
+    def __init__(self, nodes, edges, edge_des):
         self.nodes = nodes  # nodes are the nodes/vertices of the graph
         self.edges = edges  # edges are the hyperedges, a dict of lists key: edge number, values: list of tail edges
-        self.edge_weight = edge_weight  # head of the edge & the root node in the DFTBA
-        self.rules = rules  # the original rewrite grammar rules, here for preservation
+        self.edge_des = edge_des  # head of the edge & the root node in the DFTBA
 
     def __str__(self):  # tostring, mainly for debugging
-        return "nodes: " + str(self.nodes) + '\n' + "edges: " + str(self.edges) + '\n' + "edge weight: " + \
-               str(self.edge_weight)
+        return "nodes: " + str(self.nodes) + '\n' + "edges: " + str(self.edges) + '\n' + "edge destination:" + \
+               str(self.edge_des)
 
 
 """
@@ -33,7 +52,7 @@ def checkCFG(user_input):
     issues = []
     rules = user_input.split(";")  # split the input into a list of rules
     for rule in rules:
-        split_rule = rule.split("->")  # we need the first and second part of each rule
+        split_rule = rule.split("->")  # need the first and second part of each rule
         if len(split_rule) != 2:  # there should only be a left and right side to the ->
             if 1 not in issues:
                 issues += [1]
@@ -75,39 +94,68 @@ output: an instance of a LambertGraph which matches the CFG
 def CFGtoLambert(cfg):
     cfg = str(cfg)
     rules = cfg.split(";")
-    rules.sort()
-    # we need the characters chosen by the user, so we create a set (no duplicates) of only the alphabetical characters
+    # need the characters chosen by the user, so create a set (no duplicates) of only the alphabetical characters
     chars = cfg.replace("->","")
     chars = chars.replace(";","")
     chars = "".join(set(chars))
-    index = 0  # we associate rules with a number so we can tie them to edges, and have the edges accessible by number
+    index = 0  # associate rules with a number so they can be tied to edges, and have the edges accessible by number
     rndict = {}
-    nrdict = {}
     for rule in rules:
         rndict[rule] = index
-        nrdict[index] = rule
         index += 1
-    # now we set up the structures for our instance of LambertGraph
+    # now set up the structures for the instance of LambertGraph
     nodes = []
     edges = {}
-    edge_weight = {}
+    edge_des = {}
     for char in chars:
         nodes += ["q_" + char]
         # if the character is a terminal, it needs an edge coming from no nodes with itself as the weight
         if char.islower():
-            edges[index] = []  # we continue using index so we don't mess up our dictionaries
-            edge_weight[index] = [char]
+            edges[index] = []  # continue using index so it doesn't mess up the dictionaries
+            edge_des[index] = char
             index += 1
     for rule in rules:
         parts = rule.split("->")
         left = parts[0]
         right = parts[1]
         edges[rndict[rule]] = []
-        edge_weight[rndict[rule]] = left
+        edge_des[rndict[rule]] = left
         for char in right:
             edges[rndict[rule]] += ["q_" + char]
-    return LambertGraph(nodes, edges, edge_weight, nrdict)
+    return LambertGraph(nodes, edges, edge_des)
 
+
+"""
+Creates the visual for the Lambert graph using graphviz
+input: the Lambert Graph instance
+output: a graphviz graph that can be displayed as a pdf
+"""
+
+def createLambertVisual(lambertgraph):
+    graph = gv.Digraph('LambertGraph')
+    # graph the start node first
+    graph.attr('node',shape='doublecircle')
+    graph.node("q_" + lambertgraph.edge_des[0])
+    # graph the edge nodes
+    graph.attr('node', shape='circle')
+    for key in lambertgraph.edges:
+        if lambertgraph.edges[key] == []:  # arrow in from "nowhere"
+            graph.attr('node', shape='plain')  # this is how it's made to look like it's not from a node
+            graph.node(lambertgraph.edge_des[key])
+            graph.attr('node', shape='circle')
+            graph.edge(lambertgraph.edge_des[key],"q_" + lambertgraph.edge_des[key])
+        elif len(lambertgraph.edges[key]) == 1:  # simple case, just a regular edge
+            graph.edge(lambertgraph.edges[key][0], "q_" + lambertgraph.edge_des[key], label=lambertgraph.edge_des[key])
+        else:  # hyperedge time, this is where "fake nodes" come in
+            index = 0
+            graph.attr('node', shape='plain')  # create nodes for each hyperedge
+            graph.node("e" + str(key))         # make them plain so they don't distract from "real nodes"
+            graph.attr('node', shape='circle')
+            for tail in lambertgraph.edges[key]:  # send each tail to the fake node
+                graph.edge(tail, "e" + str(key), label=str(index))  # the label is the order
+                index += 1
+            graph.edge("e" + str(key), "q_" + lambertgraph.edge_des[key], label=lambertgraph.edge_des[key])
+    return graph  # ^^^ go from the fake edge to the real destination with the correct label
 
 
 """
@@ -134,12 +182,13 @@ def main():
                 "symbol, and B is a string containing any number of nonterminal and terminal symbols. This "
                 "program uses uppercase letters for nonterminal symbols and lowercase letters for the "
                 "alphabet. Please enter the rules with '->' for the arrows, with semicolons inbetween each "
-                "rule. For example: 'S->aSb;S->ab' is a^nb^n. You may also type 'quit' to quit: ")
+                "rule. For example: 'S->aSb;S->ab' is a^nb^n. It will be assumed that your first rule starts with "
+                "your start symbol. You may also type 'quit' to quit: ")
         else:
             help_or_cfg = input(checkCFG(help_or_cfg))
     lambert_graph = CFGtoLambert(help_or_cfg)
-    print(str(lambert_graph))
-    # TODO: Convert lambert class to image
+    visual = createLambertVisual(lambert_graph)
+    visual.render(tempfile.mktemp('.gv'), view=True)
 
 
 main()
