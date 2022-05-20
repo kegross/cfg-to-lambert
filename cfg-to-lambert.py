@@ -10,6 +10,8 @@ run.
 @author Kiera Gross
 email: kiera.gross@stonybrook.edu
 """
+import copy
+
 import graphviz as gv
 import tempfile
 
@@ -65,10 +67,23 @@ def checkCFG(user_input):
         if not split_rule[0].isalpha():  # the left side should be alphabetical-only
             if 4 not in issues:
                 issues += [4]
+        if len(split_rule) > 1:  # we can only check the "right side" if it exists
+            if not split_rule[1].isalpha():  # the right side should also be alphabetical-only
+                if split_rule[1] != "\\":    # or it could be lambda (\), the empty string
+                    if 4 not in issues:
+                        issues += [4]
+    emptys = []
+    starts = ""
+    for rule in rules:
+        split_rule = rule.split("->")
+        starts += split_rule[0]
         if len(split_rule) > 1:
-            if not split_rule[1].isalpha():  # the right side should also be alphabetical-only (given it exists)
-                if 4 not in issues:
-                    issues += [4]
+            if split_rule[1] == "\\":
+                emptys += [split_rule[0]]
+    for empty in emptys:
+        if starts.count(empty) < 2:
+            if 5 not in issues:
+                issues += [5]
     if issues == []:
         return ""
     else:
@@ -81,8 +96,74 @@ def checkCFG(user_input):
             if issue == 3:
                 errors += "For a context free grammar, the left side of the rule must be a nonterminal symbol. "
             if issue == 4:
-                errors += "You may only use alphabetical characters for this program. "
+                errors += "You may only use alphabetical characters for this program. If you use the empty string, it " \
+                          "must be used on its own on the right side of a rule. "
+            if issue == 5:
+                errors += "You must have a definition other than the empty string for each nonterminal symbol. "
     return errors + "You may type 'help' for help, 'quit' for quit, or try again now: "
+
+
+"""
+A helper function to generate all binary numbers of a given length
+Input: the length, the binary string so far, and the current index
+Output: the binary sequence (in list form)
+"""
+nums = []  # global variable unfortunately necessary in this case :/
+def helperGenBins(n,num,index):
+    global nums
+    if index == n:
+        nums += [num]
+    else:  # Current spot is either zero or one
+        temp = copy.copy(num)  # turns out python does weird stuff and you need to make a copy *insert eyeroll emoji*
+        temp[index] = 0
+        helperGenBins(n, temp, index + 1)
+        temp1 = copy.copy(num)
+        temp1[index] = 1
+        helperGenBins(n, temp1, index + 1)
+
+
+"""
+A recursive helper function which deals with languages that have terminal -> empty string rules
+Input: the rules (without terminal -> empty string rules), the nonterminals that lead to empty strings, the size of the
+rule set previous to the last additions (if there were any
+Output: rules with all combinations of "empty nonterms" removed in all combinations
+"""
+def helperDealWithEmptyString(rules, nonterms, prev_len):
+    if len(rules) == prev_len or len(nonterms) == 0:
+        return rules
+    else:
+        nonterm = nonterms[0]
+        prev_len = len(rules)
+        for rule in rules:
+            right = rule.split("->")[1]
+            num_nonterms = right.count(nonterm)
+            if num_nonterms > 0:
+                subseq = right.replace(nonterm,"")
+                if subseq == "":
+                    if rule.split("->")[0] not in nonterms:
+                        nonterms += rule.split("->")[0]
+                zeros = []
+                for i in range(num_nonterms):
+                    zeros += [0]
+                helperGenBins(num_nonterms, zeros, 0)
+                for combo in nums:
+                    pot_rule = ""
+                    for char in right:
+                        if char == nonterm:
+                            if combo[0] == 0:
+                                pot_rule += ""
+                                combo = combo[1:]
+                            else:
+                                pot_rule += char
+                                combo = combo[1:]
+                        else:
+                            pot_rule += char
+                    if pot_rule != "" and pot_rule != rule.split("->")[0]:
+                        formed_rule = rule.split("->")[0] + "->" + pot_rule
+                        if formed_rule not in rules:
+                            rules += [formed_rule]
+        nonterms = nonterms[1:]
+        return helperDealWithEmptyString(rules, nonterms, prev_len)
 
 
 """
@@ -93,10 +174,22 @@ output: an instance of a LambertGraph which matches the CFG
 
 def CFGtoLambert(cfg):
     cfg = str(cfg)
-    rules = cfg.split(";")
+    rules_withlam = cfg.split(";")  # We must do a couple steps to deal with the nonterminal to empty string rules
+    empty_nonterms = []
+    rules = []
+    for rule in rules_withlam:  # We first track the "empty rules" or rules leading to an empty string
+        split_rule = rule.split("->")
+        if split_rule[1] == "\\":  # if the rule goes to empty string, we track the nonterminal
+            empty_nonterms += [split_rule[0]]
+        else:
+            rules += [rule]  # otherwise the rule is added to our set of rules
+    # now we need to add all possibilities of rules with the "empty nonterms" removed in any combination
+    rules = copy.deepcopy(helperDealWithEmptyString(rules, empty_nonterms, 0))
+    print(rules)
     # need the characters chosen by the user, so create a set (no duplicates) of only the alphabetical characters
     chars = cfg.replace("->","")
     chars = chars.replace(";","")
+    chars = chars.replace("\\", "")
     chars = "".join(set(chars))
     index = 0  # associate rules with a number so they can be tied to edges, and have the edges accessible by number
     rndict = {}
@@ -182,8 +275,8 @@ def main():
                 "symbol, and B is a string containing any number of nonterminal and terminal symbols. This "
                 "program uses uppercase letters for nonterminal symbols and lowercase letters for the "
                 "alphabet. Please enter the rules with '->' for the arrows, with semicolons inbetween each "
-                "rule. For example: 'S->aSb;S->ab' is a^nb^n. It will be assumed that your first rule starts with "
-                "your start symbol. You may also type 'quit' to quit: ")
+                "rule. For example: 'S->aSb;S->ab' is a^nb^n. It will be assumed that your first rule starts with your "
+                "start symbol. Please use \'\ \' to represent the empty string. You may also type 'quit' to quit: ")
         else:
             help_or_cfg = input(checkCFG(help_or_cfg))
     lambert_graph = CFGtoLambert(help_or_cfg)
