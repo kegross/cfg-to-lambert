@@ -45,7 +45,7 @@ This does display an image that is very close to a strongly directed hypergraph,
 # How to Enter a CFG
 
 The alphabet of the CFG must be a subset of the lowercase english characters, and the terminal symbols must be a subset of the uppercase english characters.
-The CFG must be entered as a rewrite grammar, rules separated by semicolons. The arrows should be typed using n-dash - greater than (->). "\" (backslash) may be used as the empty string for rules of the form A->\ only, as empty strings elsewhere are pointless.
+The CFG must be entered as a rewrite grammar, rules separated by semicolons. The arrows should be typed using n-dash - greater than (->). "\\" (backslash) may be used as the empty string for rules of the form A->\ only, as empty strings elsewhere are pointless.
 
 An example:
 
