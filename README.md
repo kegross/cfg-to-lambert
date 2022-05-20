@@ -53,7 +53,7 @@ A rewrite grammar for a^nb^n could be written as follows: S->aSb;S->ab
 
 The image for this is displayed ![here](https://github.com/kegross/cfg-to-lambert/blob/main/aSbLambertGraph.pdf)
 
-A rewrite grammar for a^ib^k or b^ka^i could be written as follows: S->AB;S->BA;A->Aa;A->\;B->Bb;B->\
+A rewrite grammar for a^ib^k or b^ka^i could be written as follows: S->AB;S->BA;A->Aa;A->\\;B->Bb;B->\
 
 ![This is the output from cfg-to-lambert](https://github.com/kegross/cfg-to-lambert/blob/main/LambertGraphakbi.pdf)
 
