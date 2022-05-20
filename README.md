@@ -22,7 +22,7 @@ Another simplification was to limit the alphabet for CFGs to all lowercase lette
 
 It was also assumed that the start variable of the rewrite grammar was in the first rule written on the left side. This is standard convention anyway and requires less back-and-forth between user and program.
 
-Of note is that one non-alphabatical character is allowed to represent the empty string. For this program, "\" was chosen if the user wishes to create a rule involving the empty string.
+Of note is that one non-alphabatical character is allowed to represent the empty string. For this program, "\\" was chosen if the user wishes to create a rule involving the empty string.
 
 The creation of the lambert graph visual had its own challenges, discussed in the following section.
 
