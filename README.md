@@ -22,6 +22,8 @@ Another simplification was to limit the alphabet for CFGs to all lowercase lette
 
 It was also assumed that the start variable of the rewrite grammar was in the first rule written on the left side. This is standard convention anyway and requires less back-and-forth between user and program.
 
+Of note is that one non-alphabatical character is allowed to represent the empty string. For this program, "\" was chosen if the user wishes to create a rule involving the empty string.
+
 The creation of the lambert graph visual had its own challenges, discussed in the following section.
 
 # The Creation of the Lambert Graph Visual
@@ -43,10 +45,16 @@ This does display an image that is very close to a strongly directed hypergraph,
 # How to Enter a CFG
 
 The alphabet of the CFG must be a subset of the lowercase english characters, and the terminal symbols must be a subset of the uppercase english characters.
-The CFG must be entered as a rewrite grammar, rules separated by semicolons. The arrows should be typed using n-dash - greater than (->).
+The CFG must be entered as a rewrite grammar, rules separated by semicolons. The arrows should be typed using n-dash - greater than (->). "\" (backslash) may be used as the empty string for rules of the form A->\ only, as empty strings elsewhere are pointless.
 
 An example:
 
 A rewrite grammar for a^nb^n could be written as follows: S->aSb;S->ab
+
+The image for this is displayed ![here](https://github.com/kegross/cfg-to-lambert/blob/main/aSbLambertGraph.pdf)
+
+A rewrite grammar for a^ib^k or b^ka^i could be written as follows: S->AB;S->BA;A->Aa;A->\\;B->Bb;B->\
+
+![This is the output from cfg-to-lambert](https://github.com/kegross/cfg-to-lambert/blob/main/LambertGraphakbi.pdf)
 
 The program will try to tell you what you may have missed if you mistype or don't follow the rules of a context free grammar.
