@@ -117,7 +117,7 @@ def helperGenBins(n,num,index):
         temp = copy.copy(num)  # turns out python does weird stuff and you need to make a copy *insert eyeroll emoji*
         temp[index] = 0
         helperGenBins(n, temp, index + 1)
-        temp1 = copy.copy(num)
+        temp1 = copy.copy(num)  # if this copy and the other weren't made, all lists were zeros or ones
         temp1[index] = 1
         helperGenBins(n, temp1, index + 1)
 
@@ -129,40 +129,40 @@ rule set previous to the last additions (if there were any
 Output: rules with all combinations of "empty nonterms" removed in all combinations
 """
 def helperDealWithEmptyString(rules, nonterms, prev_len):
-    if len(rules) == prev_len or len(nonterms) == 0:
-        return rules
+    if len(rules) == prev_len or len(nonterms) == 0:  # if there are no empty nonterms left or if the rules haven't been
+        return rules                                    # changed, end and return
     else:
         nonterm = nonterms[0]
-        prev_len = len(rules)
+        prev_len = len(rules)  # update the length of the rules before changing the rules (potentially)
         for rule in rules:
             right = rule.split("->")[1]
-            num_nonterms = right.count(nonterm)
+            num_nonterms = right.count(nonterm)  # count the number of instances of the empty nonterminal
             if num_nonterms > 0:
                 subseq = right.replace(nonterm,"")
                 if subseq == "":
-                    if rule.split("->")[0] not in nonterms:
-                        nonterms += rule.split("->")[0]
+                    if rule.split("->")[0] not in nonterms:  # if the right side is only empty nonterminals, the left
+                        nonterms += rule.split("->")[0]      # side is also an empty nonterminal
                 zeros = []
-                for i in range(num_nonterms):
+                for i in range(num_nonterms):  # create a filled list of the correct length
                     zeros += [0]
-                helperGenBins(num_nonterms, zeros, 0)
-                for combo in nums:
+                helperGenBins(num_nonterms, zeros, 0)  # generate all binary numbers of length n where n is the count
+                for combo in nums:                       # of nonterminals in the right side
                     pot_rule = ""
                     for char in right:
-                        if char == nonterm:
-                            if combo[0] == 0:
+                        if char == nonterm:  # for each nonterminal, it could be empty string or itself, the binary
+                            if combo[0] == 0:  # numbers give all possible combinations (0 = empty, 1 = itself)
                                 pot_rule += ""
-                                combo = combo[1:]
+                                combo = combo[1:]  # get rid of the first digit in the binary number, that was used
                             else:
                                 pot_rule += char
                                 combo = combo[1:]
                         else:
-                            pot_rule += char
-                    if pot_rule != "" and pot_rule != rule.split("->")[0]:
-                        formed_rule = rule.split("->")[0] + "->" + pot_rule
-                        if formed_rule not in rules:
+                            pot_rule += char  # other characters stay the same, so just add them back on
+                    if pot_rule != "" and pot_rule != rule.split("->")[0]:  # the rule cannot be empty or just A->A
+                        formed_rule = rule.split("->")[0] + "->" + pot_rule  # form the rule
+                        if formed_rule not in rules:  # if the rule doesn't already exist, add it
                             rules += [formed_rule]
-        nonterms = nonterms[1:]
+        nonterms = nonterms[1:]  # remove the nonterminal that was dealt with
         return helperDealWithEmptyString(rules, nonterms, prev_len)
 
 
@@ -184,13 +184,11 @@ def CFGtoLambert(cfg):
         else:
             rules += [rule]  # otherwise the rule is added to our set of rules
     # now we need to add all possibilities of rules with the "empty nonterms" removed in any combination
-    rules = copy.deepcopy(helperDealWithEmptyString(rules, empty_nonterms, 0))
-    print(rules)
-    # need the characters chosen by the user, so create a set (no duplicates) of only the alphabetical characters
-    chars = cfg.replace("->","")
+    rules = copy.deepcopy(helperDealWithEmptyString(rules, empty_nonterms, 0))  # again, needed a copy for some reason
+    chars = cfg.replace("->","")  # next steps are getting the set of characters chosen by the user
     chars = chars.replace(";","")
     chars = chars.replace("\\", "")
-    chars = "".join(set(chars))
+    chars = "".join(set(chars))  # this is simply a string of all alphabetical characters used in the rules
     index = 0  # associate rules with a number so they can be tied to edges, and have the edges accessible by number
     rndict = {}
     for rule in rules:
